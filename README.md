@@ -1,1 +1,1 @@
-# Tim Park contributed nothing to this plugin.
+# [Tim Park](https://github.com/tpar-rss) contributed nothing to this plugin.
