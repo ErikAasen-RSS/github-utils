@@ -83,4 +83,24 @@ function M.open_web_client_file(remote_name)
   os.execute(cmd)
 end
 
+function M.open_web_client_permalink()
+  local url = M.get_http_remote_url(remote_name)
+  local handle = io.popen("git rev-parse HEAD")
+
+  if not handle then
+    return
+  end
+
+  local commit_hash = handle:read("*a")
+  handle:close()
+
+  commit_hash = string.gsub(commit_hash, "\n", "")
+  local current_line, current_col = unpack(vim.api.nvim_win_get_cursor(0))
+
+  local cmd =
+      string.format("open %s/blob/%s%s#L%s", url, commit_hash, M.get_filepath_relative_to_repo_root(), current_line)
+
+  os.execute(cmd)
+end
+
 return M

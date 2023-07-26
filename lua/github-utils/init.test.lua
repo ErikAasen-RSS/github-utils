@@ -5,7 +5,9 @@ local spy = require("luassert.spy")
 
 local github_utils = require("github-utils")
 describe("github_utils", function()
-  stub(vim.api, "nvim_buf_get_name").returns("/xxxxx/xxxxxxx/RSS/plugins-custom/github-utils/lua/github-utils/init.test.lua")
+  stub(vim.api, "nvim_buf_get_name").returns(
+    "/xxxxx/xxxxxxx/RSS/plugins-custom/github-utils/lua/github-utils/init.test.lua"
+  )
 
   it("gets http remote url", function()
     stub(os, "execute")
@@ -35,10 +37,16 @@ describe("github_utils", function()
         .called_with("open https://github.com/ErikAasen-RSS/github-utils/blob/main/lua/github-utils/init.test.lua")
   end)
 
-  -- it("opens web client to filenumber permalink", function()
-  --   stub(os, "execute")
-  --   stub(vim.api, "nvim_buf_get_name").returns("/RSS/plugins-custom/github-utils/lua/github-utils/init.test.lua")
-  --   local execute = spy.on(os, "execute")
-  --
-  -- end)
+  it("opens web client to filenumber permalink", function()
+    stub(os, "execute")
+    local execute = spy.on(os, "execute")
+
+    -- sets lineNum = 1
+    local current_line, current_col = unpack(vim.api.nvim_win_get_cursor(0))
+    vim.api.nvim_win_set_cursor(0, { current_line + 1, current_col })
+
+    github_utils.open_web_client_permalink()
+
+    assert.spy(execute).was.called_with("open https://github.com/ErikAasen-RSS/github-utils/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/init.test.lua#L1")
+  end)
 end)
