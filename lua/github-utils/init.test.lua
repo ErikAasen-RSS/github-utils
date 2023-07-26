@@ -5,9 +5,12 @@ local spy = require("luassert.spy")
 
 local github_utils = require("github-utils")
 describe("github_utils", function()
-  stub(vim.api, "nvim_buf_get_name").returns(
-    "/xxxxx/xxxxxxx/RSS/plugins-custom/github-utils/lua/github-utils/init.test.lua"
-  )
+  before_each(function()
+    vim.cmd.e("./lua/github-utils/test-file.lua")
+  end)
+  after_each(function()
+    vim.cmd.bd("./lua/github-utils/test-file.lua")
+  end)
 
   it("gets http remote url", function()
     stub(os, "execute")
@@ -17,7 +20,7 @@ describe("github_utils", function()
 
   it("gets relative file path", function()
     local relative_file_name = github_utils.get_filepath_relative_to_repo_root()
-    assert.equal("/lua/github-utils/init.test.lua", relative_file_name)
+    assert.equal("/lua/github-utils/test-file.lua", relative_file_name)
   end)
 
   it("opens web client", function()
@@ -34,19 +37,25 @@ describe("github_utils", function()
     github_utils.open_web_client_file()
     assert
         .spy(execute).was
-        .called_with("open https://github.com/ErikAasen-RSS/github-utils/blob/main/lua/github-utils/init.test.lua")
+        .called_with("open https://github.com/ErikAasen-RSS/github-utils/blob/main/lua/github-utils/test-file.lua")
   end)
 
-  it("opens web client to filenumber permalink", function()
+  it("creates filenumber permalink", function()
     stub(os, "execute")
+    stub(github_utils, "get_commit_hash").returns("135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e")
+
     local execute = spy.on(os, "execute")
 
-    -- sets lineNum = 1
     local current_line, current_col = unpack(vim.api.nvim_win_get_cursor(0))
-    vim.api.nvim_win_set_cursor(0, { current_line + 1, current_col })
+    vim.api.nvim_win_set_cursor(0, { current_line + 3, current_col })
 
-    github_utils.open_web_client_permalink()
+    github_utils.create_permalink()
 
-    assert.spy(execute).was.called_with("open https://github.com/ErikAasen-RSS/github-utils/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/init.test.lua#L1")
+    local register_value = vim.api.nvim_call_function("getreg", {"+"})
+
+    assert.equal(
+      "https://github.com/ErikAasen-RSS/github-utils/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L4",
+      register_value
+    )
   end)
 end)

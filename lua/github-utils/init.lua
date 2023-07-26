@@ -83,8 +83,7 @@ function M.open_web_client_file(remote_name)
   os.execute(cmd)
 end
 
-function M.open_web_client_permalink()
-  local url = M.get_http_remote_url(remote_name)
+function M.get_commit_hash()
   local handle = io.popen("git rev-parse HEAD")
 
   if not handle then
@@ -95,12 +94,21 @@ function M.open_web_client_permalink()
   handle:close()
 
   commit_hash = string.gsub(commit_hash, "\n", "")
+
+  return commit_hash
+end
+
+function M.create_permalink()
+  local url = M.get_http_remote_url(remote_name)
+  local commit_hash = M.get_commit_hash()
+  local filepath = M.get_filepath_relative_to_repo_root()
   local current_line, current_col = unpack(vim.api.nvim_win_get_cursor(0))
 
-  local cmd =
-      string.format("open %s/blob/%s%s#L%s", url, commit_hash, M.get_filepath_relative_to_repo_root(), current_line)
+  local permalink = string.format("%s/blob/%s%s#L%s", url, commit_hash, filepath, current_line)
+  local register_name = "+"
 
-  os.execute(cmd)
+  vim.api.nvim_call_function("setreg", { register_name, permalink })
+
 end
 
 return M
