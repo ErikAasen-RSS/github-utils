@@ -59,21 +59,21 @@ function M.get_filepath_relative_to_repo_root()
   return relative_file_name
 end
 
-function M.get_git_branch()
-  local branch = io.popen(string.format("git branch"))
-
-  if not branch then
-    return
-  end
-
-  local gitBranch = branch:read("*l")
-  gitBranch = string.gsub(gitBranch, "*", "")
-  gitBranch = string.gsub(gitBranch, "%s", "")
-
-  branch:close()
-
-  return gitBranch
-end
+-- function M.get_git_branch()
+--   local branch = io.popen("git branch")
+--
+--   if not branch then
+--     return
+--   end
+--
+--   local gitBranch = branch:read("*l")
+--   gitBranch = string.gsub(gitBranch, "*", "")
+--   gitBranch = string.gsub(gitBranch, "%s", "")
+--
+--   branch:close()
+--
+--   return gitBranch
+-- end
 
 function M.open_web_client_file(remote_name)
   local url = M.get_http_remote_url(remote_name)

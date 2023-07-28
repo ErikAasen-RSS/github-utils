@@ -15,7 +15,7 @@ describe("github_utils", function()
   it("gets http remote url", function()
     stub(os, "execute")
     local url = github_utils.get_http_remote_url()
-    assert.equal("https://github.com/ErikAasen-RSS/github-utils", url)
+    assert.equal("https://github.com/ErikAasen-RSS/github-utils.nvim", url)
   end)
 
   it("gets relative file path", function()
@@ -27,7 +27,12 @@ describe("github_utils", function()
     stub(os, "execute")
     local execute = spy.on(os, "execute")
     github_utils.open_web_client()
-    assert.spy(execute).was.called_with("open https://github.com/ErikAasen-RSS/github-utils")
+    assert.spy(execute).was.called_with("open https://github.com/ErikAasen-RSS/github-utils.nvim")
+  end)
+
+  it("gets current branch", function()
+    local branch = github_utils.get_git_branch()
+    assert.equal("main", branch)
   end)
 
   it("opens web client to file", function()
@@ -37,7 +42,7 @@ describe("github_utils", function()
     github_utils.open_web_client_file()
     assert
         .spy(execute).was
-        .called_with("open https://github.com/ErikAasen-RSS/github-utils/blob/main/lua/github-utils/test-file.lua")
+        .called_with("open https://github.com/ErikAasen-RSS/github-utils.nvim/blob/main/lua/github-utils/test-file.lua")
   end)
 
   it("creates filenumber permalink", function()
@@ -51,10 +56,10 @@ describe("github_utils", function()
 
     github_utils.create_permalink()
 
-    local register_value = vim.api.nvim_call_function("getreg", {"+"})
+    local register_value = vim.api.nvim_call_function("getreg", { "+" })
 
     assert.equal(
-      "https://github.com/ErikAasen-RSS/github-utils/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L4",
+      "https://github.com/ErikAasen-RSS/github-utils.nvim/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L4",
       register_value
     )
   end)
