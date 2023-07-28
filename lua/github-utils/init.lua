@@ -1,16 +1,9 @@
 local M = {}
 
+local utils = require("utils")
+
 function M.get_remote_url(remote_name)
-  local handle = io.popen(string.format("git remote get-url %s", remote_name or "origin"))
-
-  if not handle then
-    return
-  end
-
-  local remote_url = handle:read("*a")
-  handle:close()
-
-  return remote_url
+  return utils.run_command(string.format("git remote get-url %s", remote_name or "origin"))
 end
 
 function M.get_http_remote_url(remote_name)
@@ -42,14 +35,7 @@ function M.open_web_client(remote_name)
 end
 
 function M.get_filepath_relative_to_repo_root()
-  local handle = io.popen("git rev-parse --show-toplevel")
-
-  if not handle then
-    return
-  end
-
-  local repo_path = handle:read("*a")
-  handle:close()
+  local repo_path = utils.run_command("git rev-parse --show-toplevel")
 
   local repoLength = string.len(repo_path)
 
@@ -60,19 +46,12 @@ function M.get_filepath_relative_to_repo_root()
 end
 
 function M.get_git_branch()
-  local branch = io.popen(string.format("git branch"))
+  local branches = utils.run_command("git branch -vv")
 
-  if not branch then
-    return
-  end
+  local after_asterisk = string.match(branches, "%*(.*)")
+  local remote_branch = after_asterisk:match("/(.-)%]")
 
-  local gitBranch = branch:read("*l")
-  gitBranch = string.gsub(gitBranch, "*", "")
-  gitBranch = string.gsub(gitBranch, "%s", "")
-
-  branch:close()
-
-  return gitBranch
+  return remote_branch
 end
 
 function M.open_web_client_file(remote_name)
@@ -84,21 +63,14 @@ function M.open_web_client_file(remote_name)
 end
 
 function M.get_commit_hash()
-  local handle = io.popen("git rev-parse HEAD")
-
-  if not handle then
-    return
-  end
-
-  local commit_hash = handle:read("*a")
-  handle:close()
+  local commit_hash = utils.run_command("git rev-parse HEAD")
 
   commit_hash = string.gsub(commit_hash, "\n", "")
 
   return commit_hash
 end
 
-function M.create_permalink()
+function M.create_permalink(remote_name)
   local url = M.get_http_remote_url(remote_name)
   local commit_hash = M.get_commit_hash()
   local filepath = M.get_filepath_relative_to_repo_root()
@@ -108,7 +80,6 @@ function M.create_permalink()
   local register_name = "+"
 
   vim.api.nvim_call_function("setreg", { register_name, permalink })
-
 end
 
 return M

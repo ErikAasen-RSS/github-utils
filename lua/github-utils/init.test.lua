@@ -4,18 +4,24 @@ local stub = require("luassert.stub")
 local spy = require("luassert.spy")
 
 local github_utils = require("github-utils")
+local utils = require("utils")
+
 describe("github_utils", function()
+  local snapshot
+
   before_each(function()
     vim.cmd.e("./lua/github-utils/test-file.lua")
+    snapshot = assert:snapshot()
   end)
   after_each(function()
     vim.cmd.bd("./lua/github-utils/test-file.lua")
+    snapshot:revert()
   end)
 
   it("gets http remote url", function()
     stub(os, "execute")
     local url = github_utils.get_http_remote_url()
-    assert.equal("https://github.com/ErikAasen-RSS/github-utils", url)
+    assert.equal("https://github.com/ErikAasen-RSS/github-utils.nvim", url)
   end)
 
   it("gets relative file path", function()
@@ -27,17 +33,18 @@ describe("github_utils", function()
     stub(os, "execute")
     local execute = spy.on(os, "execute")
     github_utils.open_web_client()
-    assert.spy(execute).was.called_with("open https://github.com/ErikAasen-RSS/github-utils")
+    assert.spy(execute).was.called_with("open https://github.com/ErikAasen-RSS/github-utils.nvim")
   end)
 
   it("opens web client to file", function()
     stub(os, "execute")
+    stub(github_utils, "get_git_branch").returns("main")
     local execute = spy.on(os, "execute")
 
     github_utils.open_web_client_file()
     assert
         .spy(execute).was
-        .called_with("open https://github.com/ErikAasen-RSS/github-utils/blob/main/lua/github-utils/test-file.lua")
+        .called_with("open https://github.com/ErikAasen-RSS/github-utils.nvim/blob/main/lua/github-utils/test-file.lua")
   end)
 
   it("creates filenumber permalink", function()
@@ -51,11 +58,58 @@ describe("github_utils", function()
 
     github_utils.create_permalink()
 
-    local register_value = vim.api.nvim_call_function("getreg", {"+"})
+    local register_value = vim.api.nvim_call_function("getreg", { "+" })
 
     assert.equal(
-      "https://github.com/ErikAasen-RSS/github-utils/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L4",
+      "https://github.com/ErikAasen-RSS/github-utils.nvim/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L4",
       register_value
     )
+  end)
+
+  describe("gets current branch", function()
+    it("one word", function()
+      stub(utils, "run_command").returns(
+        "  main cd4faa4 [origin/main] feat: testing \n* test a95c385 [origin/random] wip \n"
+      )
+
+      local branch = github_utils.get_git_branch()
+      assert.equal("random", branch)
+    end)
+
+    it("has hyphen", function()
+      stub(utils, "run_command").returns(
+        "  main cd4faa4 [origin/main] feat: testing \n* test a95c385 [origin/random-branch] wip \n"
+      )
+
+      local branch = github_utils.get_git_branch()
+      assert.equal("random-branch", branch)
+    end)
+
+    it("has underscore", function()
+      stub(utils, "run_command").returns(
+        "  main cd4faa4 [origin/main] feat: testing \n* test a95c385 [origin/random_branch] wip \n"
+      )
+
+      local branch = github_utils.get_git_branch()
+      assert.equal("random_branch", branch)
+    end)
+
+    it("has hyphen and underscore", function()
+      stub(utils, "run_command").returns(
+        "  main cd4faa4 [origin/main] feat: testing \n* test a95c385 [origin/r$ndom_br@nch-name] wip \n"
+      )
+
+      local branch = github_utils.get_git_branch()
+      assert.equal("r$ndom_br@nch-name", branch)
+    end)
+
+    it("has multiple branches", function()
+      stub(utils, "run_command").returns(
+        "  main cd4faa4 [origin/main] feat: testing \n* test a95c385 [origin/r$ndom_br@nch-name] wip \n test2 a95c385 [origin/random_branch-name] wip "
+      )
+
+      local branch = github_utils.get_git_branch()
+      assert.equal("r$ndom_br@nch-name", branch)
+    end)
   end)
 end)
