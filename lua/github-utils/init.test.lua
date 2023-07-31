@@ -4,7 +4,7 @@ local stub = require("luassert.stub")
 local spy = require("luassert.spy")
 
 local github_utils = require("github-utils")
-local utils = require("utils")
+local utils = require("github-utils.utils")
 
 describe("github_utils", function()
   local snapshot
@@ -67,7 +67,7 @@ describe("github_utils", function()
   end)
 
   describe("gets current branch", function()
-    it("one word", function()
+    it("has one word", function()
       stub(utils, "run_command").returns(
         "  main cd4faa4 [origin/main] feat: testing \n* test a95c385 [origin/random] wip \n"
       )
@@ -110,6 +110,15 @@ describe("github_utils", function()
 
       local branch = github_utils.get_git_branch()
       assert.equal("r$ndom_br@nch-name", branch)
+    end)
+
+    it("has local ahead or behind origin", function()
+      stub(utils, "run_command").returns(
+        "  main cd4faa4 [origin/main] feat: testing \n* test a95c385 [origin/random: ahead 1] wip \n"
+      )
+
+      local branch = github_utils.get_git_branch()
+      assert.equal("random", branch)
     end)
   end)
 end)

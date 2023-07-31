@@ -1,6 +1,6 @@
 local M = {}
 
-local utils = require("utils")
+local utils = require("github-utils.utils")
 
 function M.get_remote_url(remote_name)
   return utils.run_command(string.format("git remote get-url %s", remote_name or "origin"))
@@ -49,7 +49,7 @@ function M.get_git_branch()
   local branches = utils.run_command("git branch -vv")
 
   local after_asterisk = string.match(branches, "%*(.*)")
-  local remote_branch = after_asterisk:match("/(.-)%]")
+  local remote_branch = after_asterisk:match("/(.-)[%]:]")
 
   return remote_branch
 end
@@ -57,7 +57,10 @@ end
 function M.open_web_client_file(remote_name)
   local url = M.get_http_remote_url(remote_name)
 
-  local cmd = string.format("open %s/blob/%s%s", url, M.get_git_branch(), M.get_filepath_relative_to_repo_root())
+  local branch = M.get_git_branch()
+  local filepath = M.get_filepath_relative_to_repo_root()
+
+  local cmd = string.format("open %s/blob/%s%s", url, branch, filepath )
 
   os.execute(cmd)
 end
