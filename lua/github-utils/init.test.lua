@@ -47,23 +47,37 @@ describe("github_utils", function()
         .called_with("open https://github.com/ErikAasen-RSS/github-utils.nvim/blob/main/lua/github-utils/test-file.lua")
   end)
 
-  it("creates filenumber permalink", function()
-    stub(os, "execute")
-    stub(github_utils, "get_commit_hash").returns("135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e")
+  describe("creates filenumber permalink", function()
+    it("one line", function()
+      stub(os, "execute")
+      stub(github_utils, "get_commit_hash").returns("135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e")
 
-    local execute = spy.on(os, "execute")
+      vim.api.nvim_win_set_cursor(0, { 2, 0 })
 
-    local current_line, current_col = unpack(vim.api.nvim_win_get_cursor(0))
-    vim.api.nvim_win_set_cursor(0, { current_line + 3, current_col })
+      github_utils.create_permalink()
 
-    github_utils.create_permalink()
+      local register_value = vim.fn.getreg("+")
 
-    local register_value = vim.api.nvim_call_function("getreg", { "+" })
+      assert.equal(
+        "https://github.com/ErikAasen-RSS/github-utils.nvim/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L2",
+        register_value
+      )
+    end)
 
-    assert.equal(
-      "https://github.com/ErikAasen-RSS/github-utils.nvim/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L4",
-      register_value
-    )
+    it("multi line", function()
+      stub(os, "execute")
+      stub(github_utils, "get_commit_hash").returns("135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e")
+      stub(utils, "get_visual_selection_lines").returns(2, 4)
+
+      github_utils.create_permalink_multiline()
+
+      local register_value = vim.fn.getreg("+")
+
+      assert.equal(
+        "https://github.com/ErikAasen-RSS/github-utils.nvim/blob/135726a7fe0cb9f457a324e68b5c3e00fb8c0a5e/lua/github-utils/test-file.lua#L2-4",
+        register_value
+      )
+    end)
   end)
 
   describe("gets current branch", function()

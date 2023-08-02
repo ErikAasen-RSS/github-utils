@@ -60,7 +60,7 @@ function M.open_web_client_file(remote_name)
   local branch = M.get_git_branch()
   local filepath = M.get_filepath_relative_to_repo_root()
 
-  local cmd = string.format("open %s/blob/%s%s", url, branch, filepath )
+  local cmd = string.format("open %s/blob/%s%s", url, branch, filepath)
 
   os.execute(cmd)
 end
@@ -82,7 +82,20 @@ function M.create_permalink(remote_name)
   local permalink = string.format("%s/blob/%s%s#L%s", url, commit_hash, filepath, current_line)
   local register_name = "+"
 
-  vim.api.nvim_call_function("setreg", { register_name, permalink })
+  vim.fn.setreg(register_name, permalink)
+end
+
+function M.create_permalink_multiline(remote_name)
+  local url = M.get_http_remote_url(remote_name)
+  local commit_hash = M.get_commit_hash()
+  local filepath = M.get_filepath_relative_to_repo_root()
+
+  local start_line, end_line = utils.get_visual_selection_lines()
+
+  local permalink = string.format("%s/blob/%s%s#L%s-%s", url, commit_hash, filepath, start_line, end_line)
+  local register_name = "+"
+
+  vim.fn.setreg(register_name, permalink)
 end
 
 return M
